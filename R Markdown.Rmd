@@ -1,0 +1,127 @@
+---
+title: "Why has number of car casualties in Slovenia fallen in last years?"
+author: "Elvira Nassirova"
+date: "28 Jan 2018"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F)
+
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(tidyr)
+library(RMySQL)
+library(knitr)
+library(kableExtra)
+```
+
+
+```{r slvdata}
+
+acc_data <- read.csv('data/Accidents_data.txt', sep = '\t', stringsAsFactors = F)
+
+slv_data <- filter(acc_data, Country == 'Slovenia' & measure == 'NBR') %>% 
+                  arrange(subject, measure) %>% 
+            mutate(subject = ordered(subject, 
+                                     levels = c('INJURE', 'ACCIDENTCASUAL', 'DEATH')))
+
+#Plot 1. Road accidents Statstics in Slovenia, 2000 - 2006=====
+p1 <- ggplot(slv_data, aes(x = time, y = value, color = subject, group = subject)) +
+  geom_point(size=3)+
+  geom_line(size=1)+
+  #geom_text(aes(label=value), size=3, vjust = -1.5, 
+  #          col='black', fontface="bold", show.legend = FALSE)+
+  geom_vline(xintercept = 2008, size = 1, alpha = 0.6)+
+  scale_x_continuous(name='', limits = c(2000, 2016), breaks = seq(2000, 2016, 2))+
+  scale_y_continuous(name = 'Thousands of accidents')+
+  scale_color_manual(name = 'Perspectives', 
+                     labels = c('Injures', 'Accidents involving casualties', 'Deaths'),
+                     values = c("#5586a6", "#fa990e", "#80a300"))+
+  theme_bw()+
+  theme(legend.position = 'bottom')+
+  annotate("text", x = 2008, y = 5000, size = 3, 
+           label = "Starting from 2008
+numbers are falling")+
+  labs(title = 'Road accidents Statstics in Slovenia, 2000 - 2006',
+       caption = 'Source: OECD Data 
+                  URL: https://data.oecd.org/transport/road-accidents.htm')
+
+#Plot 2. Police Report Data =====
+report_table <- read_xlsx('data/regulations_stat.xlsx') %>% 
+                  mutate_at(c('2006', '2007', '2008', '2009'),
+                            funs(format(., big.mark=" ")))
+
+agg_acc_data <- acc_data %>% filter(measure == 'NBR') %>% 
+                        group_by(Country, time) %>% summarise(accidents = sum(value))
+
+immigration <- read_xlsx('data/Imm Directions SLOVENIA STAT.xlsx', sheet = 2) %>% 
+                gather(key = 'time', value = 'immigrants', -Country) %>% 
+                mutate(Country = ordered(Country, 
+                                 levels = c('Bosnia-Herzegovina', 'Serbia', 'Macedonia')),
+                       time = as.integer(time))
+                #merge(agg_acc_data, by = c('Country', 'time'))
+
+#Plot 3. Dynamics of immigration to Slovenia, 2008 - 2015 =====
+p2 <- ggplot(immigration, aes(x = time, y = immigrants, color = Country, group = Country)) +
+  geom_point(size=3)+
+  geom_line(size=1)+
+  scale_x_continuous(name='')+
+  scale_y_continuous(name = 'Number of Immigrants')+
+  scale_color_manual(values = c("#5586a6", "#fa990e", "#80a300"))+
+  theme_bw()+
+  theme(legend.position = 'bottom')+
+  labs(title = 'Dynamics of immigration to Slovenia, 2008 - 2015',
+       caption = 'Source: Statistical Office of the Republic of Slovenia')
+
+total_imm <- immigration %>% group_by(time) %>% summarise(immigrants = sum(immigrants)) %>% 
+                merge(filter(agg_acc_data, Country == 'Slovenia'), by = 'time')
+
+#Plot 4. Accidents and Immigration correlation =====
+p3 <- ggplot(total_imm, aes(x = accidents, y = immigrants))+
+  geom_point(shape = 21, colour = "black", fill = "#5586a6", size = 3, stroke = 1.5)+
+  geom_smooth(method='lm')+
+  geom_text(aes(label=time), size=3, vjust = -1.5, 
+            col='black', fontface="bold", show.legend = FALSE)+
+  ylab('Number of Immigrants')+
+  scale_x_continuous(name = 'Number of accidents in Slovenia', 
+                     limits = c(14000, 22000), breaks = seq(14000, 22000, 2000))+
+  annotate("text", x = 18000, y = 20000, size = 5, 
+           label = paste('R^2 == ', 
+                          round(cor(total_imm$immigrants, total_imm$accidents)^2, 2)),
+           parse=TRUE)+
+  labs(title = 'Accidents and Immigration correlation')
+```
+
+As we can see from the graph below there is a significant fall in a number of car accidents starting from 2008.
+
+```{r}
+p1
+```
+
+The first thing we are going to consult is [Slovenian Police reports](https://www.policija.si/eng/index.php/statistics). According to them, in 2008 there was an introduction of harsher penalties through the amended Road Safety Act. Indeed, a lot less violations were conducted in 2008, mainly due to the Road Traffic Safety Act.
+
+```{r}
+kable(report_table, caption = 'Violations detected during road traffic controls, 2006 - 2009', align = c('l', rep('r', 4)))
+```
+
+The second interesting thing is that starting from 2010 there is a big change in net migration in Slovenia mostly due to fall of immigrants from Bosnia-Herzegovina, Serbia and Macedonia. In addition, a decrease in a number of accidents from 2009 to 2010 was seen in Slovenia (see the first graph).
+
+```{r}
+p2
+```
+
+According to the [World Health Organization report](http://www.who.int/violence_injury_prevention/road_safety_status/2015/GSRRS2015_data/en/) estimated road traffic death rate per 100 000 population in these countries is higher (from 7.7 in Serbia to 17.7 in Bosnia-Herzegovina) than in Slovenia (6.4). If we build a scatter plot for a total number of immigrants from the indicated countries and a total number of car accidents in Slovenia, we can see correlation. 
+
+```{r}
+p3
+```
+
+Overall, we may conclude there are at least **two reasons**:
+
+* New Road Safety Act
+* Decreased number of immigrants
