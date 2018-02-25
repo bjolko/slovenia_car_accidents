@@ -16,12 +16,12 @@ The first thing we are going to consult is [Slovenian Police reports](https://ww
 
 Table: Violations detected during road traffic controls, 2006 - 2009
 
-Regulations                                   2006      2007      2008      2009
-----------------------------------------  --------  --------  --------  --------
-Road Traffic Safety Act                    496 560   492 786   464 081   462 426
-Act on Working Time and Compulsory Rest      4 449     4 327     4 837     4 194
-Other regulations                            1 081       438     2 813     2 269
-Total                                      502 090   497 551   471 731   468 889
+| Regulations                              |     2006 |     2007 |     2008 |     2009 |
+| ---------------------------------------- | -------: | -------: | -------: | -------: |
+| Road Traffic Safety Act                  |  496 560 |  492 786 |  464 081 |  462 426 |
+| Act on Working Time and Compulsory Rest  |    4 449 |    4 327 |    4 837 |    4 194 |
+| Other regulations                        |    1 081 |      438 |    2 813 |    2 269 |
+| Total                                    |  502 090 |  497 551 |  471 731 |  468 889 |
 
 The second interesting thing is that starting from 2010 there is a big change in net migration in Slovenia mostly due to fall of immigrants from Bosnia-Herzegovina, Serbia and Macedonia. In addition, a decrease in a number of accidents from 2009 to 2010 was seen in Slovenia (see the first graph).
 
